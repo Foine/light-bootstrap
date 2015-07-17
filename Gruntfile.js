@@ -1,8 +1,5 @@
 /*!
  * Based on Bootstrap's Gruntfile
- * http://getbootstrap.com
- * Copyright 2013-2015 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 
 module.exports = function (grunt) {
@@ -137,7 +134,7 @@ module.exports = function (grunt) {
 
     watch: {
       src: {
-        files: '<%= jshint.core.src %>',
+        files: '<%= concat.bootstrap.src %>',
         tasks: ['concat']
       },
       less: {
