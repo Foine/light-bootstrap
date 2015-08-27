@@ -1,7 +1,7 @@
 {
   "name": "site",
   "current_theme": "theme_front_1",
-  "description": "Un super projet IdéoPortal",
+  "description": "A lighter bootstrap project",
   "version": "0.0.0",
   "devDependencies": {
     "btoa": "~1.1.2",
