@@ -1,0 +1,32 @@
+$brand-primary: #997893;
+
+@import "../bootstrap/scss/variables";
+
+@import "../bootstrap/scss/mixins";
+
+// Reset and dependencies
+@import "../bootstrap/scss/normalize";
+@import "../bootstrap/scss/reboot";
+@import "../bootstrap/scss/print";
+
+// Core CSS
+@import "../bootstrap/scss/type";
+@import "../bootstrap/scss/code";
+@import "../bootstrap/scss/grid";
+@import "../bootstrap/scss/tables";
+@import "../bootstrap/scss/forms";
+@import "../bootstrap/scss/buttons";
+
+// Components
+@import "../bootstrap/scss/animation";
+@import "../bootstrap/scss/nav";
+@import "../bootstrap/scss/navbar";
+@import "../bootstrap/scss/media";
+
+// Utility classes
+@import "../bootstrap/scss/utilities";
+@import "../bootstrap/scss/utilities-responsive";
+
+#content {
+  margin:$grid-gutter-width 0;
+}

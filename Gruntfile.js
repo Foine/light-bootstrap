@@ -1,4 +1,4 @@
-/*!
+/*
  * Based on Bootstrap's Gruntfile
  */
 
@@ -14,12 +14,11 @@ module.exports = function (grunt) {
 
   var fs = require('fs');
   var path = require('path');
-  var npmShrinkwrap = require('npm-shrinkwrap');
-  var configBridge = grunt.file.readJSON('bootstrap/grunt/configBridge.json', { encoding: 'utf8' });
+  var glob = require('glob');
+  var mq4HoverShim = require('mq4-hover-shim');
 
   var pkg = grunt.file.readJSON('package.json');
   var theme = grunt.file.readJSON('theme.json');
-
   var js_files = theme[pkg.current_theme].js_dependencies.concat(['common_public/theme/'+pkg.current_theme+'/javascript/'+pkg.name+'_src.js']);
 
   // Project configuration.
@@ -27,10 +26,22 @@ module.exports = function (grunt) {
 
     // Metadata.
     pkg: pkg,
-    theme: theme,
-    js_files: js_files,
-    jqueryCheck: configBridge.config.jqueryCheck.join('\n'),
-    jqueryVersionCheck: configBridge.config.jqueryVersionCheck.join('\n'),
+    theme:theme,
+    js_files:js_files,
+    banner: '/*!\n' +
+    ' * Bootstrap v<%= pkg.version %> (<%= pkg.homepage %>)\n' +
+    ' * Copyright 2011-<%= grunt.template.today("yyyy") %> <%= pkg.author %>\n' +
+    ' * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n' +
+    ' */\n',
+    jqueryCheck: 'if (typeof jQuery === \'undefined\') {\n' +
+    '  throw new Error(\'Bootstrap\\\'s JavaScript requires jQuery\')\n' +
+    '}\n',
+    jqueryVersionCheck: '+function ($) {\n' +
+    '  var version = $.fn.jquery.split(\' \')[0].split(\'.\')\n' +
+    '  if ((version[0] < 2 && version[1] < 9) || (version[0] == 1 && version[1] == 9 && version[2] < 1)) {\n' +
+    '    throw new Error(\'Bootstrap\\\'s JavaScript requires jQuery version 1.9.1 or higher\')\n' +
+    '  }\n' +
+    '}(jQuery);\n\n',
 
     // Task configuration.
     clean: {
@@ -63,46 +74,34 @@ module.exports = function (grunt) {
       }
     },
 
-    less: {
-      compileCore: {
-        options: {
-          strictMath: true,
-          sourceMap: true,
-          outputSourceFiles: true,
-          sourceMapURL: '<%= pkg.name %>.css.map',
-          sourceMapFilename: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css.map'
-        },
-        src: 'less/<%= pkg.name %>_<%= pkg.current_theme %>.less',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css'
+    postcss: {
+      options: {
+        map: true,
+        processors: [mq4HoverShim.postprocessorFor({ hoverSelectorPrefix: '.bs-true-hover ' })]
       },
-      compileTheme: {
-        options: {
-          strictMath: true,
-          sourceMap: true,
-          outputSourceFiles: true,
-          sourceMapURL: '<%= pkg.name %>-theme.css.map',
-          sourceMapFilename: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css.map'
-        },
-        src: 'less/theme_<%= pkg.current_theme %>.less',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css'
+      core: {
+        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css'
       }
     },
 
     autoprefixer: {
       options: {
-        browsers: configBridge.config.autoprefixerBrowsers
+        browsers: [
+          'Android 2.3',
+          'Android >= 4',
+          'Chrome >= 35',
+          'Firefox >= 31',
+          'Explorer >= 9',
+          'iOS >= 7',
+          'Opera >= 12',
+          'Safari >= 7.1'
+        ]
       },
       core: {
         options: {
           map: true
         },
         src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css'
-      },
-      theme: {
-        options: {
-          map: true
-        },
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css'
       }
     },
 
@@ -110,48 +109,26 @@ module.exports = function (grunt) {
       options: {
         // TODO: disable `zeroUnits` optimization once clean-css 3.2 is released
         //    and then simplify the fix for https://github.com/twbs/bootstrap/issues/14837 accordingly
-        compatibility: 'ie8',
+        compatibility: 'ie9',
         keepSpecialComments: '*',
         sourceMap: true,
         advanced: false
       },
-      minifyCore: {
+      core: {
         src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css',
         dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.min.css'
-      },
-      minifyTheme: {
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.min.css'
-      }
-    },
-
-    csscomb: {
-      options: {
-        config: 'bootstrap/less/.csscomb.json'
-      },
-      dist: {
-        expand: true,
-        cwd: 'common_public/theme/<%= pkg.current_theme %>/style/',
-        src: ['*.css', '!*.min.css'],
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/'
       }
     },
 
     watch: {
       src: {
         files: '<%= concat.bootstrap.src %>',
-        tasks: ['concat']
+        tasks: ['js']
       },
-      less: {
-        files: 'less/**/*.less',
-        tasks: 'less'
-      }
-    },
-
-    exec: {
-      npmUpdate: {
-        command: 'npm update'
-      }
+      sass: {
+        files: 'scss/**/*.scss',
+        tasks: ['css']
+      },
     },
 
     bless: {
@@ -161,8 +138,14 @@ module.exports = function (grunt) {
           compress: true
         },
         files: {
-          'common_public/theme/<%= pkg.current_theme %>/style/ie9.css': '<%= less.compileCore.dest %>'
+          'common_public/theme/<%= pkg.current_theme %>/style/ie9.css': '<%= cssmin.core.dest %>'
         }
+      }
+    },
+
+    exec: {
+      npmUpdate: {
+        command: 'npm update'
       }
     }
 
@@ -170,38 +153,27 @@ module.exports = function (grunt) {
 
 
   // These plugins provide necessary tasks.
-  require('load-grunt-tasks')(grunt, { scope: 'devDependencies' });
+  require('load-grunt-tasks')(grunt, { scope: 'devDependencies',
+    // Exclude Sass compilers. We choose the one to load later on.
+    pattern: ['grunt-*', '!grunt-sass', '!grunt-contrib-sass'] });
   require('time-grunt')(grunt);
 
-  // JS distribution task.
-  grunt.registerTask('ideoPortal', ['less', 'bless', 'cssmin', 'concat', 'uglify']);
-
-  // JS distribution task.
-  grunt.registerTask('dist-js', ['concat', 'uglify:core', 'commonjs']);
 
   // CSS distribution task.
-  grunt.registerTask('less-compile', ['less:compileCore', 'less:compileTheme']);
-  grunt.registerTask('dist-css', ['less-compile', 'autoprefixer:core', 'autoprefixer:theme', 'csscomb:dist', 'cssmin:minifyCore', 'cssmin:minifyTheme']);
+  // Supported Compilers: sass (Ruby) and libsass.
+  (function (sassCompilerName) {
+    require('./grunt/bs-sass-compile/' + sassCompilerName + '.js')(grunt);
+  })(process.env.TWBS_SASS || 'libsass');
+  // grunt.registerTask('sass-compile', ['sass:core', 'sass:extras', 'sass:docs']);
+  grunt.registerTask('sass-compile', ['sass:core']);
 
-  // Full distribution task.
-  grunt.registerTask('dist', ['clean:dist', 'dist-css', 'dist-js']);
+  grunt.registerTask('css', ['sass-compile', 'postcss:core', 'autoprefixer:core', 'cssmin:core', 'bless']);
+
+  grunt.registerTask('js', ['concat', 'uglify']);
 
   // Default task.
-  grunt.registerTask('default', ['clean:dist']);
+  grunt.registerTask('default', ['ideoPortal']);
 
-  // Task for updating the cached npm packages used by the Travis build (which are controlled by test-infra/npm-shrinkwrap.json).
-  // This task should be run and the updated file should be committed whenever Bootstrap's dependencies change.
-  grunt.registerTask('update-shrinkwrap', ['exec:npmUpdate', '_update-shrinkwrap']);
-  grunt.registerTask('_update-shrinkwrap', function () {
-    var done = this.async();
-    npmShrinkwrap({ dev: true, dirname: __dirname }, function (err) {
-      if (err) {
-        grunt.fail.warn(err);
-      }
-      var dest = 'test-infra/npm-shrinkwrap.json';
-      fs.renameSync('npm-shrinkwrap.json', dest);
-      grunt.log.writeln('File ' + dest.cyan + ' updated.');
-      done();
-    });
-  });
+  grunt.registerTask('ideoPortal', ['css', 'js']);
+
 };
