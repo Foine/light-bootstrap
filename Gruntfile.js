@@ -17,11 +17,18 @@ module.exports = function (grunt) {
   var npmShrinkwrap = require('npm-shrinkwrap');
   var configBridge = grunt.file.readJSON('bootstrap/grunt/configBridge.json', { encoding: 'utf8' });
 
+  var pkg = grunt.file.readJSON('package.json');
+  var theme = grunt.file.readJSON('theme.json');
+
+  var js_files = theme[pkg.current_theme].js_dependencies.concat(['common_public/theme/'+pkg.current_theme+'/javascript/'+pkg.name+'_src.js']);
+
   // Project configuration.
   grunt.initConfig({
 
     // Metadata.
-    pkg: grunt.file.readJSON('package.json'),
+    pkg: pkg,
+    theme: theme,
+    js_files: js_files,
     jqueryCheck: configBridge.config.jqueryCheck.join('\n'),
     jqueryVersionCheck: configBridge.config.jqueryVersionCheck.join('\n'),
 
@@ -37,9 +44,7 @@ module.exports = function (grunt) {
         stripBanners: false
       },
       bootstrap: {
-        src: [
-          'common_public/theme/<%= pkg.current_theme %>/javascript/<%= pkg.name %>_src.js'
-        ],
+        src: js_files,
         dest: 'common_public/theme/<%= pkg.current_theme %>/javascript/<%= pkg.name %>.js'
       }
     },
@@ -147,6 +152,18 @@ module.exports = function (grunt) {
       npmUpdate: {
         command: 'npm update'
       }
+    },
+
+    bless: {
+      css: {
+        options: {
+          cacheBuster: false,
+          compress: true
+        },
+        files: {
+          'common_public/theme/<%= pkg.current_theme %>/style/ie9.css': '<%= less.compileCore.dest %>'
+        }
+      }
     }
 
   });
@@ -157,7 +174,7 @@ module.exports = function (grunt) {
   require('time-grunt')(grunt);
 
   // JS distribution task.
-  grunt.registerTask('ideoPortal', ['less', 'cssmin', 'concat', 'uglify']);
+  grunt.registerTask('ideoPortal', ['less', 'bless', 'cssmin', 'concat', 'uglify']);
 
   // JS distribution task.
   grunt.registerTask('dist-js', ['concat', 'uglify:core', 'commonjs']);

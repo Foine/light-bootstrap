@@ -1,0 +1,8 @@
+{
+  "theme_front_1": {
+    "js_dependencies": [
+      "bootstrap/js/dropdown.js",
+      "bootstrap/js/collapse.js"
+    ]
+  }
+}
