@@ -20,7 +20,9 @@ module.exports = function (grunt) {
   var pkg = grunt.file.readJSON('package.json');
   var theme = grunt.file.readJSON('theme.json');
 
-  var js_files = theme[pkg.current_theme].js_dependencies.concat(['common_public/theme/'+pkg.current_theme+'/javascript/'+pkg.name+'_src.js']);
+  var theme_path = '../common_public/theme/'+pkg.current_theme;
+  var js_files = theme[pkg.current_theme].js_dependencies.concat([theme_path+'/javascript/'+pkg.name+'_src.js']);
+
 
   // Project configuration.
   grunt.initConfig({
@@ -45,7 +47,7 @@ module.exports = function (grunt) {
       },
       bootstrap: {
         src: js_files,
-        dest: 'common_public/theme/<%= pkg.current_theme %>/javascript/<%= pkg.name %>.js'
+        dest: theme_path+'/javascript/<%= pkg.name %>.js'
       }
     },
 
@@ -59,7 +61,7 @@ module.exports = function (grunt) {
       },
       core: {
         src: '<%= concat.bootstrap.dest %>',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/javascript/<%= pkg.name %>.min.js'
+        dest: theme_path+'/javascript/<%= pkg.name %>.min.js'
       }
     },
 
@@ -70,21 +72,10 @@ module.exports = function (grunt) {
           sourceMap: true,
           outputSourceFiles: true,
           sourceMapURL: '<%= pkg.name %>.css.map',
-          sourceMapFilename: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css.map'
+          sourceMapFilename: theme_path+'/style/<%= pkg.name %>.css.map'
         },
         src: 'less/<%= pkg.name %>_<%= pkg.current_theme %>.less',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css'
-      },
-      compileTheme: {
-        options: {
-          strictMath: true,
-          sourceMap: true,
-          outputSourceFiles: true,
-          sourceMapURL: '<%= pkg.name %>-theme.css.map',
-          sourceMapFilename: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css.map'
-        },
-        src: 'less/theme_<%= pkg.current_theme %>.less',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css'
+        dest: theme_path+'/style/<%= pkg.name %>.css'
       }
     },
 
@@ -96,13 +87,7 @@ module.exports = function (grunt) {
         options: {
           map: true
         },
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css'
-      },
-      theme: {
-        options: {
-          map: true
-        },
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css'
+        src: theme_path+'/style/<%= pkg.name %>.css'
       }
     },
 
@@ -116,24 +101,8 @@ module.exports = function (grunt) {
         advanced: false
       },
       minifyCore: {
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.min.css'
-      },
-      minifyTheme: {
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.css',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>-theme.min.css'
-      }
-    },
-
-    csscomb: {
-      options: {
-        config: 'bootstrap/less/.csscomb.json'
-      },
-      dist: {
-        expand: true,
-        cwd: 'common_public/theme/<%= pkg.current_theme %>/style/',
-        src: ['*.css', '!*.min.css'],
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/'
+        src: theme_path+'/style/<%= pkg.name %>.css',
+        dest: theme_path+'/style/<%= pkg.name %>.min.css'
       }
     },
 
@@ -161,7 +130,7 @@ module.exports = function (grunt) {
           compress: true
         },
         files: {
-          'common_public/theme/<%= pkg.current_theme %>/style/ie9.css': '<%= less.compileCore.dest %>'
+          '<%= theme_path %>/style/ie9.css': '<%= less.compileCore.dest %>'
         }
       }
     }
@@ -173,21 +142,17 @@ module.exports = function (grunt) {
   require('load-grunt-tasks')(grunt, { scope: 'devDependencies' });
   require('time-grunt')(grunt);
 
-  // JS distribution task.
-  grunt.registerTask('ideoPortal', ['less', 'bless', 'cssmin', 'concat', 'uglify']);
-
-  // JS distribution task.
-  grunt.registerTask('dist-js', ['concat', 'uglify:core', 'commonjs']);
-
   // CSS distribution task.
-  grunt.registerTask('less-compile', ['less:compileCore', 'less:compileTheme']);
-  grunt.registerTask('dist-css', ['less-compile', 'autoprefixer:core', 'autoprefixer:theme', 'csscomb:dist', 'cssmin:minifyCore', 'cssmin:minifyTheme']);
+  grunt.registerTask('less-compile', ['less:compileCore', 'bless', 'cssmin']);
 
-  // Full distribution task.
-  grunt.registerTask('dist', ['clean:dist', 'dist-css', 'dist-js']);
+  // JS distribution task.
+  grunt.registerTask('js-compile', ['concat', 'uglify']);
+
+  // CSS + JS distribution task
+  grunt.registerTask('ideoPortal', ['less-compile', 'js-compile']);
 
   // Default task.
-  grunt.registerTask('default', ['clean:dist']);
+  grunt.registerTask('default', ['watch']);
 
   // Task for updating the cached npm packages used by the Travis build (which are controlled by test-infra/npm-shrinkwrap.json).
   // This task should be run and the updated file should be committed whenever Bootstrap's dependencies change.

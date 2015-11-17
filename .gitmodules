@@ -1,3 +1,3 @@
-[submodule "bootstrap"]
-	path = bootstrap
+[submodule "_src/bootstrap"]
+	path = _src/bootstrap
 	url = https://github.com/Foine/bootstrap.git
