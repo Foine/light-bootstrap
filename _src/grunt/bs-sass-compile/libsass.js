@@ -13,7 +13,7 @@ module.exports = function configureLibsass(grunt) {
       },
       core: {
         files: {
-          'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css': 'scss/<%= pkg.current_theme %>.scss'
+          '../common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.styles_name %>.css': 'scss/<%= pkg.current_theme %>.scss'
         }
       },
     }

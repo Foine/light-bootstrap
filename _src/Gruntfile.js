@@ -19,7 +19,8 @@ module.exports = function (grunt) {
 
   var pkg = grunt.file.readJSON('package.json');
   var theme = grunt.file.readJSON('theme.json');
-  var js_files = theme[pkg.current_theme].js_dependencies.concat(['common_public/theme/'+pkg.current_theme+'/javascript/'+pkg.name+'_src.js']);
+  var theme_path = '../common_public/theme/'+pkg.current_theme;
+  var js_files = theme[pkg.current_theme].js_dependencies.concat([theme_path+'/javascript/'+pkg.js_name+'_src.js']);
 
   // Project configuration.
   grunt.initConfig({
@@ -43,12 +44,6 @@ module.exports = function (grunt) {
     '  }\n' +
     '}(jQuery);\n\n',
 
-    // Task configuration.
-    clean: {
-      dist: 'dist',
-      docs: 'docs/dist'
-    },
-
     concat: {
       options: {
         banner: '<%= banner %>\n<%= jqueryCheck %>\n<%= jqueryVersionCheck %>',
@@ -56,7 +51,7 @@ module.exports = function (grunt) {
       },
       bootstrap: {
         src: js_files,
-        dest: 'common_public/theme/<%= pkg.current_theme %>/javascript/<%= pkg.name %>.js'
+        dest: theme_path+'/javascript/<%= pkg.js_name %>.js'
       }
     },
 
@@ -70,7 +65,7 @@ module.exports = function (grunt) {
       },
       core: {
         src: '<%= concat.bootstrap.dest %>',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/javascript/<%= pkg.name %>.min.js'
+        dest: theme_path+'/javascript/<%= pkg.js_name %>.min.js'
       }
     },
 
@@ -80,7 +75,7 @@ module.exports = function (grunt) {
         processors: [mq4HoverShim.postprocessorFor({ hoverSelectorPrefix: '.bs-true-hover ' })]
       },
       core: {
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css'
+        src: theme_path+'/style/<%= pkg.styles_name %>.css'
       }
     },
 
@@ -101,7 +96,7 @@ module.exports = function (grunt) {
         options: {
           map: true
         },
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css'
+        src: theme_path+'/style/<%= pkg.styles_name %>.css'
       }
     },
 
@@ -115,8 +110,8 @@ module.exports = function (grunt) {
         advanced: false
       },
       core: {
-        src: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.css',
-        dest: 'common_public/theme/<%= pkg.current_theme %>/style/<%= pkg.name %>.min.css'
+        src: theme_path+'/style/<%= pkg.styles_name %>.css',
+        dest: theme_path+'/style/<%= pkg.styles_name %>.min.css'
       }
     },
 
@@ -138,7 +133,7 @@ module.exports = function (grunt) {
           compress: true
         },
         files: {
-          'common_public/theme/<%= pkg.current_theme %>/style/ie9.css': '<%= cssmin.core.dest %>'
+          '<%= theme_path %>/style/ie9.css': '<%= cssmin.core.dest %>'
         }
       }
     },
@@ -164,7 +159,7 @@ module.exports = function (grunt) {
   (function (sassCompilerName) {
     require('./grunt/bs-sass-compile/' + sassCompilerName + '.js')(grunt);
   })(process.env.TWBS_SASS || 'libsass');
-  // grunt.registerTask('sass-compile', ['sass:core', 'sass:extras', 'sass:docs']);
+
   grunt.registerTask('sass-compile', ['sass:core']);
 
   grunt.registerTask('css', ['sass-compile', 'postcss:core', 'autoprefixer:core', 'cssmin:core', 'bless']);

@@ -1,5 +1,7 @@
 {
-  "name": "site",
+  "name": "my_package",
+  "js_name": "site",
+  "styles_name": "styles",
   "current_theme": "theme_front_1",
   "description": "A lighter bootstrap project",
   "version": "0.0.0",
