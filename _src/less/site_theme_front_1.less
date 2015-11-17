@@ -28,3 +28,23 @@
 // Utility classes
 @import "../bootstrap/less/utilities.less";
 @import "../bootstrap/less/responsive-utilities.less";
+
+//Margin utility class
+.mt(@counter) when (@counter < 55) {
+  .mt-@{counter} {
+    margin-top: (@counter*1px);
+  }
+  .mt((@counter + 5));
+
+  // next iteration 
+}
+
+.mt(5);
+.mb(@counter) when (@counter < 55) {
+  .mb-@{counter} {
+    margin-bottom: (@counter*1px);
+  }
+  .mb((@counter + 5));
+}
+
+.mb(5);
