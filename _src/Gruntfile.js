@@ -21,7 +21,7 @@ module.exports = function (grunt) {
   var theme = grunt.file.readJSON('theme.json');
 
   var theme_path = '../common_public/theme/'+pkg.current_theme;
-  var js_files = theme[pkg.current_theme].js_dependencies.concat([theme_path+'/javascript/'+pkg.name+'_src.js']);
+  var js_files = theme[pkg.current_theme].js_dependencies.concat([theme_path+'/javascript/'+pkg.js_name+'_src.js']);
 
 
   // Project configuration.
@@ -47,7 +47,7 @@ module.exports = function (grunt) {
       },
       bootstrap: {
         src: js_files,
-        dest: theme_path+'/javascript/<%= pkg.name %>.js'
+        dest: theme_path+'/javascript/<%= pkg.js_name %>.js'
       }
     },
 
@@ -61,7 +61,7 @@ module.exports = function (grunt) {
       },
       core: {
         src: '<%= concat.bootstrap.dest %>',
-        dest: theme_path+'/javascript/<%= pkg.name %>.min.js'
+        dest: theme_path+'/javascript/<%= pkg.js_name %>.min.js'
       }
     },
 
@@ -71,11 +71,11 @@ module.exports = function (grunt) {
           strictMath: true,
           sourceMap: true,
           outputSourceFiles: true,
-          sourceMapURL: '<%= pkg.name %>.css.map',
-          sourceMapFilename: theme_path+'/style/<%= pkg.name %>.css.map'
+          sourceMapURL: '<%= pkg.styles_name %>.css.map',
+          sourceMapFilename: theme_path+'/style/<%= pkg.styles_name %>.css.map'
         },
-        src: 'less/<%= pkg.name %>_<%= pkg.current_theme %>.less',
-        dest: theme_path+'/style/<%= pkg.name %>.css'
+        src: 'less/<%= pkg.styles_name %>_<%= pkg.current_theme %>.less',
+        dest: theme_path+'/style/<%= pkg.styles_name %>.css'
       }
     },
 
@@ -87,7 +87,7 @@ module.exports = function (grunt) {
         options: {
           map: true
         },
-        src: theme_path+'/style/<%= pkg.name %>.css'
+        src: theme_path+'/style/<%= pkg.styles_name %>.css'
       }
     },
 
@@ -101,8 +101,8 @@ module.exports = function (grunt) {
         advanced: false
       },
       minifyCore: {
-        src: theme_path+'/style/<%= pkg.name %>.css',
-        dest: theme_path+'/style/<%= pkg.name %>.min.css'
+        src: theme_path+'/style/<%= pkg.styles_name %>.css',
+        dest: theme_path+'/style/<%= pkg.styles_name %>.min.css'
       }
     },
 
